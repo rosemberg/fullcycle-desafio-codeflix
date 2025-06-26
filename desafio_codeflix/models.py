@@ -3,6 +3,11 @@ import uuid
 from enum import StrEnum
 
 # Create your models here.
+class MediaStatus(StrEnum):
+    PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
 class CastMemberType(StrEnum):
     DIRECTOR = "DIRECTOR"
     ACTOR = "ACTOR"
@@ -60,6 +65,21 @@ class Rating(StrEnum):
     AGE_16 = "16"
     AGE_18 = "18"
 
+class AudioVideoMedia(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    file_path = models.CharField(max_length=255)
+    encoded_path = models.CharField(max_length=255, null=True, blank=True)
+    status = models.CharField(
+        max_length=10,
+        choices=[(status.name, status.value) for status in MediaStatus],
+        default=MediaStatus.PENDING
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Media {self.id} - {self.status}"
+
 class Video(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=255)
@@ -74,6 +94,7 @@ class Video(models.Model):
     categories = models.ManyToManyField(Category, related_name='videos')
     genres = models.ManyToManyField(Genre, related_name='videos')
     cast_members = models.ManyToManyField(CastMember, related_name='videos')
+    video = models.OneToOneField(AudioVideoMedia, on_delete=models.SET_NULL, null=True, blank=True, related_name='video')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
