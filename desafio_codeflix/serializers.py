@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import CastMember, CastMemberType
+from .base import BaseSerializer
 
 class CastMemberTypeField(serializers.ChoiceField):
     def __init__(self, **kwargs):
@@ -15,7 +16,7 @@ class CastMemberTypeField(serializers.ChoiceField):
         # O valor vindo do nosso domínio é convertido para uma string na API
         return str(super().to_representation(value))
 
-class CastMemberSerializer(serializers.ModelSerializer):
+class CastMemberSerializer(BaseSerializer):
     type = CastMemberTypeField()
 
     class Meta:

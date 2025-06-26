@@ -33,7 +33,34 @@ class CastMemberAPITest(APITestCase):
     def test_list_cast_members(self):
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertIn('data', response.data)
+        self.assertIn('meta', response.data)
+        self.assertEqual(len(response.data['data']), 1)
+        self.assertEqual(response.data['meta']['current_page'], 1)
+        self.assertEqual(response.data['meta']['total'], 1)
+
+    def test_pagination(self):
+        # Create more cast members to test pagination
+        for i in range(15):
+            CastMember.objects.create(
+                name=f"Cast Member {i}",
+                type=CastMemberType.ACTOR if i % 2 == 0 else CastMemberType.DIRECTOR
+            )
+
+        # Test first page
+        response = self.client.get(f"{self.list_url}?current_page=1")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('data', response.data)
+        self.assertIn('meta', response.data)
+        self.assertEqual(response.data['meta']['current_page'], 1)
+        self.assertEqual(response.data['meta']['total'], 16)  # 15 new + 1 from setUp
+
+        # Test second page
+        response = self.client.get(f"{self.list_url}?current_page=2")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('data', response.data)
+        self.assertIn('meta', response.data)
+        self.assertEqual(response.data['meta']['current_page'], 2)
 
     def test_retrieve_cast_member(self):
         response = self.client.get(self.detail_url)
