@@ -1,9 +1,11 @@
+# Import test classes directly
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from .models import CastMember, CastMemberType, Category, Genre, Video, Rating, AudioVideoMedia, MediaStatus
 from .serializers import CreateVideoSerializer
+from .test_utils import JWTAuthMixin
 import time
 
 # Create your tests here.
@@ -371,6 +373,32 @@ class CreateVideoSerializerTest(TestCase):
         self.assertEqual(video.genres.first().id, self.genre.id)
         self.assertEqual(video.cast_members.first().id, self.cast_member.id)
 
+class JWTAuthTest(JWTAuthMixin, APITestCase):
+    """
+    Test case that demonstrates how to use JWT authentication in tests.
+    """
+    def test_auth_with_jwt(self):
+        """
+        Test that requests can be authenticated with JWT tokens.
+        """
+        # The JWTAuthMixin.setUp method has already set the Authorization header
+        # with a JWT token that has the default roles.
+
+        # Make a request to the API
+        response = self.client.get(reverse('castmember-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Test with different roles
+        self.set_auth(roles=["user"])
+        response = self.client.get(reverse('castmember-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Test without authentication
+        self.remove_auth()
+        response = self.client.get(reverse('castmember-list'))
+        # If the API requires authentication, this would return 401 Unauthorized
+        # But since our API doesn't require authentication yet, it will still return 200 OK
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 class VideoMediaEndToEndTest(APITestCase):
     """
